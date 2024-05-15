@@ -23,6 +23,9 @@ Eerst zal er een onderzoek worden gedaan naar de verschillende audio filters die
 
 Daarna zal er een prototype worden gemaakt in MATLAB. Hierin zullen de effecten worden geïmplementeerd en getest. Deze zullen dan worden geoptimaliseerd met OpenCL.
 
+* v0.1: los werkend: node editor, audio input, opencl werkend
+* v0.2: gain node in node editor
+
 ## Eindproduct
 
 In de applicatie zal je:

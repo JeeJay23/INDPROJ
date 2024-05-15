@@ -32,13 +32,13 @@ audio_data, nChannels, nFrames, frameRate, sampWidth = read_wavefile('output.wav
 print(f'Channels: {nChannels}, Frames: {nFrames}, Frame Rate: {frameRate}, Sample Width: {sampWidth}')
 print(audio_data.shape)
 
-test_data = np.array(range(0, 10), dtype=np.float32)
+# test_data = np.array(range(0, 10), dtype=np.float32)
 
-input_buffer = cl.Buffer(ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=test_data)
+input_buffer = cl.Buffer(ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=audio_data)
 output_buffer = cl.Buffer(ctx, cl.mem_flags.WRITE_ONLY, audio_data.nbytes)
 
-program.apply_gain(queue, test_data.shape, None, input_buffer, output_buffer)
-output_data = np.empty_like(test_data)
+program.apply_gain(queue, audio_data.shape, None, input_buffer, output_buffer, np.float32(2.0))
+output_data = np.empty_like(audio_data)
 cl.enqueue_copy(queue, output_data, output_buffer).wait()
 
 print(output_data)
