@@ -33,10 +33,21 @@ Daarna zal er een prototype worden gemaakt in MATLAB. Hierin zullen de effecten 
 | 08/05 | Onderzoek opencl          | 2 uur |
 | 15/05 | Onderzoek dpg             | 2 uur |
 | 22/05 | Onderzoek numpy en opencl | 2 uur |
+| 27/05 | Onderzoek ruis            | 6 uur |
 
 - [ ] fix live input
 - [ ] add adding nodes
 - [ ] fix noise when using filter
+
+### 15/05
+
+* meerdere problemen met het data formaat, deze zijn opgelost
+
+### 22/05
+
+Ik loop tegen een onverwacht noise probleem aan na het implementeren van een simpele gain filter. Dit is op commit `2a9331f`. De gain heeft een factor 1. Maar ik krijg toch een onverklaarbare ruis in de output file (`output_gain.wav`). Ik zie na het inlezen van de file dat er in het `audio_data` bestand `nan` waardes zitten. Dit is direct na het inlezen van het `.wav` bestand. Ik weet dat alle parameters (sample rate, channels, etc) goed zijn. Ik heb dit gecontroleerd door de `audio_data` weer te schrijven naar een nieuw `.wav` bestand. Dit bestand klinkt precies zoals het origineel.
+
+Uiteindelijk was het probleem dat de wave file values zijn encoded als 16 bit integers.
 
 ## Eindproduct
 
