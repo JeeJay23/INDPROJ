@@ -5,6 +5,9 @@ import dearpygui as dpg
 import numpy as np
 import wave
 import pyaudio
+import os
+
+os.environ['PYOPENCL_CTX'] = ''
 
 ctx = cl.create_some_context()
 queue = cl.CommandQueue(ctx)
@@ -22,23 +25,27 @@ def read_wavefile(filename):
         sampWidth = wf.getsampwidth()
 
         raw = wf.readframes(nFrames)
-        audio_data = np.frombuffer(raw, dtype=np.float32)
+        audio_data = np.frombuffer(raw, dtype=np.float16).astype(np.float32)
 
         return audio_data, nChannels, nFrames, frameRate, sampWidth
 
+input_data, nChannels, nFrames, sampleRate, sampWidth = read_wavefile('chime.wav')
+input_data = np.nan_to_num(input_data)
 
-audio_data, nChannels, nFrames, frameRate, sampWidth = read_wavefile('output.wav')
+print(f'Channels: {nChannels}, Frames: {nFrames}, Frame Rate: {sampleRate}, Sample Width: {sampWidth}')
 
-print(f'Channels: {nChannels}, Frames: {nFrames}, Frame Rate: {frameRate}, Sample Width: {sampWidth}')
-print(audio_data.shape)
+input_buffer = cl.Buffer(ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=input_data)
+output_buffer = cl.Buffer(ctx, cl.mem_flags.WRITE_ONLY, input_data.nbytes)
 
-# test_data = np.array(range(0, 10), dtype=np.float32)
+program.apply_gain(queue, input_data.shape, None, input_buffer, output_buffer, np.float32(1.0))
+output_data = np.empty_like(input_data)
 
-input_buffer = cl.Buffer(ctx, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=audio_data)
-output_buffer = cl.Buffer(ctx, cl.mem_flags.WRITE_ONLY, audio_data.nbytes)
+print(f"nans: {np.count_nonzero(np.isnan(input_data))}")
 
-program.apply_gain(queue, audio_data.shape, None, input_buffer, output_buffer, np.float32(2.0))
-output_data = np.empty_like(audio_data)
 cl.enqueue_copy(queue, output_data, output_buffer).wait()
 
-print(output_data)
+with wave.open('output_gain.wav', 'wb') as wf:
+    wf.setnchannels(nChannels)
+    wf.setsampwidth(sampWidth)
+    wf.setframerate(sampleRate)
+    wf.writeframes(input_data.astype(dtype=np.float16).tobytes())

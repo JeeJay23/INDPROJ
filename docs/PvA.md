@@ -26,6 +26,18 @@ Daarna zal er een prototype worden gemaakt in MATLAB. Hierin zullen de effecten 
 * v0.1: los werkend: node editor, audio input, opencl werkend
 * v0.2: gain node in node editor
 
+## Logboek
+
+| Datum | Onderwerp                 | Tijd  |
+| ----- | ------------------------- | ----- |
+| 08/05 | Onderzoek opencl          | 2 uur |
+| 15/05 | Onderzoek dpg             | 2 uur |
+| 22/05 | Onderzoek numpy en opencl | 2 uur |
+
+- [ ] fix live input
+- [ ] add adding nodes
+- [ ] fix noise when using filter
+
 ## Eindproduct
 
 In de applicatie zal je:
