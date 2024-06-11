@@ -49,6 +49,10 @@ Ik loop tegen een onverwacht noise probleem aan na het implementeren van een sim
 
 Uiteindelijk was het probleem dat de wave file values zijn encoded als 16 bit integers. Met dat opgelost kan een basis ui in dpg gerealiseerd worden.
 
+## 11/06
+
+
+
 ## Eindproduct
 
 In de applicatie zal je:
