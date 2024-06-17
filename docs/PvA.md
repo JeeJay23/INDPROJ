@@ -15,6 +15,8 @@ De applicatie zal geschreven worden in python en gebruik maken van de volgende l
 - PyAudio
 - NumPy
 
+Voor projectstructuur zal er gebruikt worden gemaakt van github issues.
+
 Ook is het mogelijk dat er andere libraries worden gebruikt voor het berekenen van de audio filters. Deze zullen uit het onderzoek rollen.
 
 ## Planning
@@ -23,21 +25,27 @@ Eerst zal er een onderzoek worden gedaan naar de verschillende audio filters die
 
 Daarna zal er een prototype worden gemaakt in MATLAB. Hierin zullen de effecten worden geïmplementeerd en getest. Deze zullen dan worden geoptimaliseerd met OpenCL.
 
-* v0.1: los werkend: node editor, audio input, opencl werkend
-* v0.2: gain node in node editor
-
 ## Logboek
 
-| Datum | Onderwerp                 | Tijd  |
-| ----- | ------------------------- | ----- |
-| 08/05 | Onderzoek opencl          | 2 uur |
-| 15/05 | Onderzoek dpg             | 2 uur |
-| 22/05 | Onderzoek numpy en opencl | 2 uur |
-| 27/05 | Onderzoek ruis            | 6 uur |
+| Datum | Onderwerp                                       | Tijd (uren) |
+| ----- | ----------------------------------------------- | ----------- |
+| 08/05 | Onderzoek opencl                                | 2           |
+| 15/05 | Onderzoek dpg                                   | 2           |
+| 22/05 | Onderzoek numpy en opencl                       | 2           |
+| 27/05 | Onderzoek ruis                                  | 6           |
+| 11/06 | gui verder uitwerken                            | 5           |
+| 17/06 | buffer probleem oplossen; distortion toegevoegd | 5           |
+|       |                                                 |             |
 
 - [ ] fix live input
 - [ ] add adding nodes
-- [ ] fix noise when using filter
+- [X] fix noise when using filter
+- [ ] implement buffer system
+- [ ] implement distortion filter
+- [ ] implement band pass fir filter
+- [ ] implement frequency spectrum visualisation
+- [ ] add stop recording button
+- [ ] fix memory leak in opencl when closing application
 
 ### 15/05
 
@@ -50,6 +58,10 @@ Ik loop tegen een onverwacht noise probleem aan na het implementeren van een sim
 Uiteindelijk was het probleem dat de wave file values zijn encoded als 16 bit integers. Met dat opgelost kan een basis ui in dpg gerealiseerd worden.
 
 ## 11/06
+
+Ik heb een visualisatie van opgevangen audio toegevoegd aan de audio input node. Ik wou een buffer systeem implementeren dat de audio in chunks verwerkt. Hiervoor heb ik gebruik gemaakt van callbacks op de audioread functie van pyaudio. Ook heb ik een audio processing module aangemaakt en alle audio verwrking functies hierin geplaatst. De buffer werkt nog niet zoals verwacht.
+
+## 17/06
 
 
 
