@@ -34,18 +34,20 @@ Daarna zal er een prototype worden gemaakt in MATLAB. Hierin zullen de effecten 
 | 22/05 | Onderzoek numpy en opencl                       | 2           |
 | 27/05 | Onderzoek ruis                                  | 6           |
 | 11/06 | gui verder uitwerken                            | 5           |
-| 17/06 | buffer probleem oplossen; distortion toegevoegd | 5           |
+| 17/06 | buffer probleem oplossen; distortion toegevoegd | 7           |
 |       |                                                 |             |
 
-- [ ] fix live input
+- [X] fix live input
 - [ ] add adding nodes
 - [X] fix noise when using filter
-- [ ] implement buffer system
+- [X] implement buffer system
 - [ ] implement distortion filter
+- [X] implement convolutie kernel program
 - [ ] implement band pass fir filter
 - [ ] implement frequency spectrum visualisation
-- [ ] add stop recording button
+- [X] add stop recording button
 - [ ] fix memory leak in opencl when closing application
+- [ ] design filter in matlab en export coefficients
 
 ### 15/05
 
@@ -63,6 +65,7 @@ Ik heb een visualisatie van opgevangen audio toegevoegd aan de audio input node.
 
 ## 17/06
 
+De buffer werkt. Ook is er een gain node aangemaakt, en een visualisatie node. Deze zijn voor nu hard gecoded. Verder is er een convolutie kernel geschreven. Deze neemt een input en een serie coefficienten en voert een convolutie uit. Het is nu getest met een moving average filter.
 
 
 ## Eindproduct
