@@ -35,7 +35,7 @@ Daarna zal er een prototype worden gemaakt in MATLAB. Hierin zullen de effecten 
 | 27/05 | Onderzoek ruis                                                | 6           |
 | 11/06 | gui verder uitwerken                                          | 5           |
 | 17/06 | buffer probleem oplossen; distortion toegevoegd               | 7           |
-| 18/06 | fourier transformatie toegevoegd, band pass filter toegevoegd | 7           |
+| 18/06 | fourier transformatie toegevoegd, band pass filter toegevoegd | 10          |
 |       |                                                               |             |
 
 - [X] fix live input
@@ -43,11 +43,16 @@ Daarna zal er een prototype worden gemaakt in MATLAB. Hierin zullen de effecten 
 - [X] implement buffer system
 - [X] implement convolutie kernel program
 - [X] add stop recording button
-- [ ] design filter in matlab en export coefficients
-- [ ] implement band pass fir filter
-- [ ] implement frequency spectrum visualisation
+- [X] test convolution kernel
+- [X] fix memory leak in opencl when closing application
+- [X] design filter in matlab en export coefficients
+- [X] implement low pass fir filter
+- [X] implement fourier transform kernel
+- [X] implement frequency spectrum visualisation
+- [ ] implement compression filter
+- [ ] implement inverse fourier transform kernel
+- [ ] implement modifiable band pass filter
 - [ ] implement distortion filter
-- [ ] fix memory leak in opencl when closing application
 - [ ] add adding nodes
 
 ### 15/05
@@ -70,9 +75,39 @@ Ik heb een visualisatie van opgevangen audio toegevoegd aan de audio input node.
 
 > commit `22a2ca7` 
 
-De buffer werkt. Ook is er een gain node aangemaakt, en een visualisatie node. Deze zijn voor nu hard gecoded. Verder is er een convolutie kernel geschreven. Deze neemt een input en een serie coefficienten en voert een convolutie uit. Het is nu getest met een moving average filter.
+De buffer werkt. Ook is er een gain node aangemaakt, en een visualisatie node. Deze zijn voor nu hard gecoded. Verder is er een convolutie kernel geschreven. Deze neemt een input en een serie coefficienten en voert een convolutie uit. Dit is een lichtelijk aangepaste versie van de convolutie operatie omdat deze iets simpeler in de kernel te implementeren is. Maar het resultaat is hetzelfde. De berekening die ik gebruik is de volgende:
+
+$$
+  y[n] = \sum_{k=0}^{N-1} {x[n+k] \cdot h[k]}
+$$
+
+met $x$ de input, $h$ de coefficienten, $y$ de output en $N$ de lengte van de coefficienten.
 
 ### 18/06
+
+Om de convolutie te testen heb ik 1 specifieke toon uit `chime.wav` gefiltert met de filter gedefineert in `export.csv`. Deze filter is ontwikkeld in matlab en blokkeert het bereik van 600 tot 700 Hz. De frequentiekarakteristiek staat in Fig 1. 
+
+![Fig 1](./img/bandpass_test_frequency_characteristic.jpg "Fig 1") 
+
+Het resultaat is te horen in `output_bandpass_test.wav`. Verder heb ik een low pass filter ontworpen die frequenties boven de 10kHz blokkeert. Hierna ben ik een fourier transformatie gaan implementeren. Hiervoor maak ik gebruik van de discrete fourier transform. Deze ziet er als volgt uit:
+
+$$
+  X[k] = \sum_{n=0}^{N-1} {x[n] \cdot e^{-j2\pi \frac{kn}{N}}}
+$$
+
+Omdat vermigvuldigen met een complex getal lastig is in OpenCL heb ik de volgende formule gebruikt:
+
+$$
+  X[k] = \sum_{n=0}^{N-1} {x[n] \cdot \cos(2\pi \frac{kn}{N}) - x[n] \cdot \sin(2\pi \frac{kn}{N})}
+$$
+
+Nu kan ik de amplitude voor elk frequentiecomponent zo berekenen:
+
+$$
+  | X[k] | = \sqrt{Re(X[k])^2 + Im(X[k])^2}
+$$
+
+Ik heb inspiratie genomen van [deze](https://ochafik.com/p_501) blog post. Ik heb aanpassingen gemaakt omdat ik alleen de absolute waarde wil weten. Ook weet ik dat het imaginaire component van mijn input altijd 0 zal zijn. Daarmee kan ik specifieker zijn met mijn algoritme. Helaas werkt dit nog niet helemaal. De output komt niet overeen met de matlab variant. Wel is de output dichtbij de matlab variant. Het zou kunnen dat dit komt door de grootte van de variabelen. De afwijking is klein genoeg om te verwaarlozen.
 
 ## Eindproduct
 
