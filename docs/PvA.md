@@ -27,27 +27,28 @@ Daarna zal er een prototype worden gemaakt in MATLAB. Hierin zullen de effecten 
 
 ## Logboek
 
-| Datum | Onderwerp                                       | Tijd (uren) |
-| ----- | ----------------------------------------------- | ----------- |
-| 08/05 | Onderzoek opencl                                | 2           |
-| 15/05 | Onderzoek dpg                                   | 2           |
-| 22/05 | Onderzoek numpy en opencl                       | 2           |
-| 27/05 | Onderzoek ruis                                  | 6           |
-| 11/06 | gui verder uitwerken                            | 5           |
-| 17/06 | buffer probleem oplossen; distortion toegevoegd | 7           |
-|       |                                                 |             |
+| Datum | Onderwerp                                                     | Tijd (uren) |
+| ----- | ------------------------------------------------------------- | ----------- |
+| 08/05 | Onderzoek opencl                                              | 2           |
+| 15/05 | Onderzoek dpg                                                 | 2           |
+| 22/05 | Onderzoek numpy en opencl                                     | 2           |
+| 27/05 | Onderzoek ruis                                                | 6           |
+| 11/06 | gui verder uitwerken                                          | 5           |
+| 17/06 | buffer probleem oplossen; distortion toegevoegd               | 7           |
+| 18/06 | fourier transformatie toegevoegd, band pass filter toegevoegd | 7           |
+|       |                                                               |             |
 
 - [X] fix live input
-- [ ] add adding nodes
 - [X] fix noise when using filter
 - [X] implement buffer system
-- [ ] implement distortion filter
 - [X] implement convolutie kernel program
+- [X] add stop recording button
+- [ ] design filter in matlab en export coefficients
 - [ ] implement band pass fir filter
 - [ ] implement frequency spectrum visualisation
-- [X] add stop recording button
+- [ ] implement distortion filter
 - [ ] fix memory leak in opencl when closing application
-- [ ] design filter in matlab en export coefficients
+- [ ] add adding nodes
 
 ### 15/05
 
@@ -59,14 +60,19 @@ Ik loop tegen een onverwacht noise probleem aan na het implementeren van een sim
 
 Uiteindelijk was het probleem dat de wave file values zijn encoded als 16 bit integers. Met dat opgelost kan een basis ui in dpg gerealiseerd worden.
 
-## 11/06
+### 11/06
+
+> commit `6d311f3`
 
 Ik heb een visualisatie van opgevangen audio toegevoegd aan de audio input node. Ik wou een buffer systeem implementeren dat de audio in chunks verwerkt. Hiervoor heb ik gebruik gemaakt van callbacks op de audioread functie van pyaudio. Ook heb ik een audio processing module aangemaakt en alle audio verwrking functies hierin geplaatst. De buffer werkt nog niet zoals verwacht.
 
-## 17/06
+### 17/06 
+
+> commit `22a2ca7` 
 
 De buffer werkt. Ook is er een gain node aangemaakt, en een visualisatie node. Deze zijn voor nu hard gecoded. Verder is er een convolutie kernel geschreven. Deze neemt een input en een serie coefficienten en voert een convolutie uit. Het is nu getest met een moving average filter.
 
+### 18/06
 
 ## Eindproduct
 
