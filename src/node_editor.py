@@ -3,8 +3,10 @@
 import dearpygui.dearpygui as dpg
 import numpy as np
 import audio_processing 
+from node import DspNode
 
 dpg.create_context()
+dpg.create_viewport(title='Custom DSPedal', width=1200, height=900)
 ap = audio_processing.AudioProcessing()
 GRAPH_MAX_AMP = 1.0
 GRAPH_MIN_AMP = -1.0
@@ -34,10 +36,10 @@ def open_stream(sender, app_data):
         ap.close_stream()
 
     ap = audio_processing.AudioProcessing()
-    ap.chunk = dpg.get_value("bufferSize")
+    ap.audio_chunk_size = dpg.get_value("bufferSize")
 
     # all precomputed filters are created with an fs of 44100. Changing this value will cause the filters to break
-    ap.fs = dpg.get_value("fs")
+    ap.sampling_rate = dpg.get_value("fs")
     ap.on_audio_received = update_plot
     ap.on_processed_audio = on_audio_processed
     ap.playback = True
@@ -66,7 +68,7 @@ def on_update_yAxis(sender, app_data):
     dpg.set_axis_limits("yAxis", 0, dpg.get_value("freq_yscale"))
 
 
-with dpg.window(label="Node editor", tag="Primary Window", menubar=True):
+with dpg.window(label="Node editor", menubar=True) as node_editor:
     with dpg.node_editor(callback=link_callback, delink_callback=delink_callback):
         with dpg.node(label="Audio input", tag="AudioInput"):
             with dpg.node_attribute(label="Audio buffer", attribute_type=dpg.mvNode_Attr_Output):
@@ -96,48 +98,50 @@ with dpg.window(label="Node editor", tag="Primary Window", menubar=True):
                 dpg.add_input_float(label="Gain", default_value=1, width=200, callback=on_gain_changed)
             with dpg.node_attribute(label="Output", attribute_type=dpg.mvNode_Attr_Output):
                 pass
+        test = DspNode("GainTEST")
+        print(test.nodeId)
         
-        with dpg.node(label="Visualiser", tag="visualiser"):
-            with dpg.node_attribute(label="Audio input", attribute_type=dpg.mvNode_Attr_Input):
-                pass
-            with dpg.node_attribute(label="visualiser", attribute_type=dpg.mvNode_Attr_Output):
-                with dpg.plot(label="Waveform Plot", height=500):
-                    dpg.add_plot_axis(dpg.mvXAxis, label="Samples", tag="xAxis_2")
-                    dpg.set_axis_limits(dpg.last_item(), 0, dpg.get_value("bufferSize"))
-                    with dpg.plot_axis(dpg.mvYAxis, label="Amplitude"):
-                        dpg.set_axis_limits(dpg.last_item(), GRAPH_MIN_AMP, GRAPH_MAX_AMP)
-                        dpg.add_line_series([], [], label="Audio Data", parent=dpg.last_item(), tag="audio_series_2")
+        # with dpg.node(label="Visualiser", tag="visualiser"):
+        #     with dpg.node_attribute(label="Audio input", attribute_type=dpg.mvNode_Attr_Input):
+        #         pass
+        #     with dpg.node_attribute(label="visualiser", attribute_type=dpg.mvNode_Attr_Output):
+        #         with dpg.plot(label="Waveform Plot", height=500):
+        #             dpg.add_plot_axis(dpg.mvXAxis, label="Samples", tag="xAxis_2")
+        #             dpg.set_axis_limits(dpg.last_item(), 0, dpg.get_value("bufferSize"))
+        #             with dpg.plot_axis(dpg.mvYAxis, label="Amplitude"):
+        #                 dpg.set_axis_limits(dpg.last_item(), GRAPH_MIN_AMP, GRAPH_MAX_AMP)
+        #                 dpg.add_line_series([], [], label="Audio Data", parent=dpg.last_item(), tag="audio_series_2")
         
-        with dpg.node(label="Frequency spectrum", tag="freq_vis"):
-            with dpg.node_attribute(label="Audio input", attribute_type=dpg.mvNode_Attr_Input):
-                pass
-            with dpg.node_attribute(label="visualiser", attribute_type=dpg.mvNode_Attr_Output):
-                dpg.add_slider_int(
-                    tag="freq_yscale",
-                    label="frequency_y_scale",
-                    width=150,
-                    default_value=100,
-                    min_value=100,
-                    max_value=2000,
-                    callback=on_update_yAxis)
-                with dpg.plot(label="Frequency Spectrum", height=500):
-                    dpg.add_plot_axis(dpg.mvXAxis, label="Frequency", tag="xAxis_3")
-                    # because we are submitting our input in chunks to the dft, we get a result of the same size
-                    dpg.set_axis_limits(dpg.last_item(), 0, dpg.get_value("bufferSize"))
-                    with dpg.plot_axis(dpg.mvYAxis, tag="yAxis", label="Magnitude"):
-                        dpg.set_axis_limits(dpg.last_item(), 0, 1000)
-                        dpg.add_line_series([], [], label="Frequency Data", parent=dpg.last_item(), tag="freq_series")
+        # with dpg.node(label="Frequency spectrum", tag="freq_vis"):
+        #     with dpg.node_attribute(label="Audio input", attribute_type=dpg.mvNode_Attr_Input):
+        #         pass
+        #     with dpg.node_attribute(label="visualiser", attribute_type=dpg.mvNode_Attr_Output):
+        #         dpg.add_slider_int(
+        #             tag="freq_yscale",
+        #             label="frequency_y_scale",
+        #             width=150,
+        #             default_value=100,
+        #             min_value=100,
+        #             max_value=2000,
+        #             callback=on_update_yAxis)
+        #         with dpg.plot(label="Frequency Spectrum", height=500):
+        #             dpg.add_plot_axis(dpg.mvXAxis, label="Frequency", tag="xAxis_3")
+        #             # because we are submitting our input in chunks to the dft, we get a result of the same size
+        #             dpg.set_axis_limits(dpg.last_item(), 0, dpg.get_value("bufferSize"))
+        #             with dpg.plot_axis(dpg.mvYAxis, tag="yAxis", label="Magnitude"):
+        #                 dpg.set_axis_limits(dpg.last_item(), 0, 1000)
+        #                 dpg.add_line_series([], [], label="Frequency Data", parent=dpg.last_item(), tag="freq_series")
 
         with dpg.node(label="Output", tag="out"):
             with dpg.node_attribute(label="Settings"):
                 dpg.add_input_float(label="Volume", default_value=1, width=200)
 
-dpg.create_viewport(title='Custom DSPedal', width=1200, height=900)
+dpg.set_item_pos(test.nodeId, (200, 200))
+
 dpg.setup_dearpygui()
-# dpg.show_item_registry()
+dpg.show_item_registry()
 dpg.show_viewport()
-dpg.set_primary_window("Primary Window", True)
+dpg.set_primary_window(node_editor, True)
 dpg.start_dearpygui()
 dpg.destroy_context()
-
 ap.close_stream()
