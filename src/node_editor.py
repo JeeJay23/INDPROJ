@@ -3,7 +3,7 @@
 import dearpygui.dearpygui as dpg
 import numpy as np
 import audio_processing 
-from node import DspNode
+import node as nodes
 
 dpg.create_context()
 dpg.create_viewport(title='Custom DSPedal', width=1200, height=900)
@@ -49,16 +49,13 @@ def open_stream(sender, app_data):
     ap.open_stream()
 
 def close_stream(sender, app_data):
-    global ap
     ap.close_stream()
 
 def on_audio_processed(chunk, processed_chunk, dtf_abs):
-    global ap
     dpg.set_value("audio_series_2", [list(range(dpg.get_value("bufferSize"))), processed_chunk.tolist()])
     dpg.set_value("freq_series", [list(range(int(dpg.get_value("bufferSize")))), dtf_abs.tolist()])
 
 def on_gain_changed(sender, app_data):
-    global ap
     ap.gain = dpg.get_value(sender)
 
 def update_plot(audio_data):
@@ -70,36 +67,34 @@ def on_update_yAxis(sender, app_data):
 
 with dpg.window(label="Node editor", menubar=True) as node_editor:
     with dpg.node_editor(callback=link_callback, delink_callback=delink_callback):
-        with dpg.node(label="Audio input", tag="AudioInput"):
-            with dpg.node_attribute(label="Audio buffer", attribute_type=dpg.mvNode_Attr_Output):
-                dpg.add_slider_int(
-                    tag="bufferSize",
-                    label="buffer size",
-                    width=150,
-                    default_value=1024,
-                    min_value=100,
-                    max_value=2000,
-                    callback=on_update_buffer_size)
-                dpg.add_input_float(tag="volume", label="volume", width=150, default_value=1.0)
-                dpg.add_input_int(tag="fs", label="sample rate", width=150, default_value=44100)
+        # with dpg.node(label="Audio input", tag="AudioInput"):
+        #     with dpg.node_attribute(label="Audio buffer", attribute_type=dpg.mvNode_Attr_Output):
+        #         dpg.add_slider_int(
+        #             tag="bufferSize",
+        #             label="buffer size",
+        #             width=150,
+        #             default_value=1024,
+        #             min_value=100,
+        #             max_value=2000,
+        #             callback=on_update_buffer_size)
+        #         dpg.add_input_float(tag="volume", label="volume", width=150, default_value=1.0)
+        #         dpg.add_input_int(tag="fs", label="sample rate", width=150, default_value=44100)
 
-                with dpg.plot(label="Waveform Plot", height=500):
-                    dpg.add_plot_axis(dpg.mvXAxis, label="Samples", tag="xAxis")
-                    dpg.set_axis_limits(dpg.last_item(), 0, dpg.get_value("bufferSize"))
-                    with dpg.plot_axis(dpg.mvYAxis, label="Amplitude"):
-                        dpg.set_axis_limits(dpg.last_item(), GRAPH_MIN_AMP, GRAPH_MAX_AMP)
-                        dpg.add_line_series([], [], label="Audio Data", parent=dpg.last_item(), tag="audio_series")
+        #         with dpg.plot(label="Waveform Plot", height=500):
+        #             dpg.add_plot_axis(dpg.mvXAxis, label="Samples", tag="xAxis")
+        #             dpg.set_axis_limits(dpg.last_item(), 0, dpg.get_value("bufferSize"))
+        #             with dpg.plot_axis(dpg.mvYAxis, label="Amplitude"):
+        #                 dpg.set_axis_limits(dpg.last_item(), GRAPH_MIN_AMP, GRAPH_MAX_AMP)
+        #                 dpg.add_line_series([], [], label="Audio Data", parent=dpg.last_item(), tag="audio_series")
 
-                dpg.add_button(label="Open stream", callback=open_stream)
-                dpg.add_button(label="Close stream", callback=close_stream)
+        #         dpg.add_button(label="Open stream", callback=open_stream)
+        #         dpg.add_button(label="Close stream", callback=close_stream)
 
-        with dpg.node(label="Gain", tag="gain"):
-            with dpg.node_attribute(label="Settings"):
-                dpg.add_input_float(label="Gain", default_value=1, width=200, callback=on_gain_changed)
-            with dpg.node_attribute(label="Output", attribute_type=dpg.mvNode_Attr_Output):
-                pass
-        test = DspNode("GainTEST")
-        print(test.nodeId)
+        # with dpg.node(label="Gain", tag="gain"):
+        #     with dpg.node_attribute(label="Settings"):
+        #         dpg.add_input_float(label="Gain", default_value=1, width=200, callback=on_gain_changed)
+        #     with dpg.node_attribute(label="Output", attribute_type=dpg.mvNode_Attr_Output):
+        #         pass
         
         # with dpg.node(label="Visualiser", tag="visualiser"):
         #     with dpg.node_attribute(label="Audio input", attribute_type=dpg.mvNode_Attr_Input):
@@ -132,16 +127,18 @@ with dpg.window(label="Node editor", menubar=True) as node_editor:
         #                 dpg.set_axis_limits(dpg.last_item(), 0, 1000)
         #                 dpg.add_line_series([], [], label="Frequency Data", parent=dpg.last_item(), tag="freq_series")
 
-        with dpg.node(label="Output", tag="out"):
-            with dpg.node_attribute(label="Settings"):
-                dpg.add_input_float(label="Volume", default_value=1, width=200)
+        # with dpg.node(label="Output", tag="out"):
+        #     with dpg.node_attribute(label="Settings"):
+        #         dpg.add_input_float(label="Volume", default_value=1, width=200)
 
-dpg.set_item_pos(test.nodeId, (200, 200))
+        sin_node_out = nodes.SinusOutputNode("SinusOutput")
+
 
 dpg.setup_dearpygui()
-dpg.show_item_registry()
+# dpg.show_item_registry()
 dpg.show_viewport()
 dpg.set_primary_window(node_editor, True)
 dpg.start_dearpygui()
+sin_node_out.stop()
 dpg.destroy_context()
 ap.close_stream()
