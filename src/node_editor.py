@@ -138,8 +138,8 @@ with dpg.window(label="Node editor", menubar=True) as node_editor:
         #     with dpg.node_attribute(label="Settings"):
         #         dpg.add_input_float(label="Volume", default_value=1, width=200)
 
-        sine_output_node = nodes.SineOscillatorNode("SinusOutput")
-        audio_playback_node = nodes.AudioPlaybackNode("AudioOut")
+        sine_output_node = nodes.SineOscillatorNode("Sinus Generator")
+        audio_playback_node = nodes.AudioPlaybackNode("Audio Out")
 
 dpg.setup_dearpygui()
 dpg.show_item_registry()
