@@ -3,7 +3,7 @@
 import dearpygui.dearpygui as dpg
 import numpy as np
 import audio_processing 
-import node as nodes
+import nodes
 
 dpg.create_context()
 dpg.create_viewport(title='Custom DSPedal', width=1200, height=900)
@@ -12,17 +12,24 @@ GRAPH_MAX_AMP = 1.0
 GRAPH_MIN_AMP = -1.0
 
 def link_callback(sender, app_data):
-    print(f"sender {sender}, app_data {app_data}")
-    outAttrTag, inAttrTag = app_data
+    from_node = dpg.get_item_user_data(app_data[0])
+    to_node = dpg.get_item_user_data(app_data[1])
 
-    print(dpg.get_item_children(outAttrTag))
+    from_node.on_linked_output(to_node)
+    to_node.on_linked_input(from_node)
 
-    dpg.add_node_link(app_data[0], app_data[1], parent=sender)
+    print(f'from node: {from_node} to node: {to_node}')
 
-# callback runs when user attempts to disconnect attributes
+    dpg.add_node_link(app_data[0], app_data[1], parent=sender, user_data=(from_node, to_node))
+
 def delink_callback(sender, app_data):
     # app_data -> link_id
-    print(f"sender {sender}, app_data {app_data}")
+
+    linked_nodes = dpg.get_item_user_data(app_data)
+    linked_nodes[0].on_delinked_output(linked_nodes[1])
+    linked_nodes[1].on_delinked_input(linked_nodes[0])
+
+    print(f'from node: {linked_nodes[0]} to node: {linked_nodes[1]}')
     dpg.delete_item(app_data)
 
 def on_update_buffer_size(sender, app_data):
@@ -131,14 +138,14 @@ with dpg.window(label="Node editor", menubar=True) as node_editor:
         #     with dpg.node_attribute(label="Settings"):
         #         dpg.add_input_float(label="Volume", default_value=1, width=200)
 
-        sin_node_out = nodes.SinusOutputNode("SinusOutput")
-
+        sine_output_node = nodes.SineOscillatorNode("SinusOutput")
+        audio_playback_node = nodes.AudioPlaybackNode("AudioOut")
 
 dpg.setup_dearpygui()
-# dpg.show_item_registry()
+dpg.show_item_registry()
 dpg.show_viewport()
 dpg.set_primary_window(node_editor, True)
 dpg.start_dearpygui()
-sin_node_out.stop()
+sine_output_node.stop()
 dpg.destroy_context()
 ap.close_stream()
