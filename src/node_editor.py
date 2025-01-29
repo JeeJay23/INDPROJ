@@ -146,6 +146,8 @@ dpg.show_item_registry()
 dpg.show_viewport()
 dpg.set_primary_window(node_editor, True)
 dpg.start_dearpygui()
-sine_output_node.stop()
+
+# cleanup
+audio_playback_node.stop()
 dpg.destroy_context()
 ap.close_stream()

@@ -13,9 +13,10 @@ class SineOscillatorNode(DspNode):
         self.phase = 0.0
         self.block_size = BLOCK_SIZE
         self.output_buffer = np.zeros(self.block_size)
+        self.horizontal_axis = np.arange(self.block_size).tolist()
 
-        self.run()
         super().__init__(name)
+        self.run()
 
     def draw(self):
         with dpg.node(label=self.name) as self.node_id:
@@ -45,6 +46,15 @@ class SineOscillatorNode(DspNode):
                     callback=self.on_freq_changed
                 )
 
+                with dpg.plot(label="Waveform Plot", height=500 ) as self.sine_plot:
+                    dpg.add_plot_axis(dpg.mvXAxis, label="Samples")
+                    dpg.set_axis_limits(dpg.last_item(), 0, self.block_size)
+
+                    with dpg.plot_axis(dpg.mvYAxis, label="Amplitude"):
+                        dpg.set_axis_limits(dpg.last_item(), -1, 1)
+                        self.sine_series = dpg.add_line_series(self.horizontal_axis, self.output_buffer.tolist(), label="Sine Wave", parent=dpg.last_item())
+                    
+
             self.output = dpg.add_node_attribute(
                 label="Output",
                 parent=self.node_id,
@@ -54,15 +64,21 @@ class SineOscillatorNode(DspNode):
 
     def on_amplitude_changed(self, sender, app_data):
         self.amplitude = dpg.get_value(self.input_amplitude)
+        self.run()
 
     def on_freq_changed(self, sender, app_data):
         self.freq = dpg.get_value(self.input_freq)
+        self.run()
 
     def on_linked_output(self, node):
         super().on_linked_output(node)
+
+    def refresh_graph(self):
+        dpg.set_value(self.sine_series, [self.horizontal_axis, self.output_buffer.tolist()])
 
     def run(self):
         phase_increment = 2 * np.pi * self.freq / self.fs
         self.output_buffer = self.amplitude * np.sin(self.phase + phase_increment * np.arange(self.block_size))
         self.phase += phase_increment * self.block_size
         self.phase = self.phase % (2 * np.pi)
+        self.refresh_graph()
