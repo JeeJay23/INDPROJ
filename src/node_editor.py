@@ -20,7 +20,8 @@ def link_callback(sender, app_data):
 
     print(f'from node: {from_node} to node: {to_node}')
 
-    dpg.add_node_link(app_data[0], app_data[1], parent=sender, user_data=(from_node, to_node))
+    link = dpg.add_node_link(app_data[0], app_data[1], parent=sender, user_data=(from_node, to_node))
+    from_node.out_links.append(link)
 
 def delink_callback(sender, app_data):
     # app_data -> link_id
@@ -71,9 +72,30 @@ def update_plot(audio_data):
 def on_update_yAxis(sender, app_data):
     dpg.set_axis_limits("yAxis", 0, dpg.get_value("freq_yscale"))
 
+node_list = []
+node_editor = None
 
-with dpg.window(label="Node editor", menubar=True) as node_editor:
-    with dpg.node_editor(callback=link_callback, delink_callback=delink_callback):
+def add_node(nodetype):
+    if node_editor is None:
+        return
+    elif (nodetype == 'audio'):
+        node = nodes.AudioPlaybackNode("Audio Input", node_editor)
+    elif (nodetype == 'sine'):
+        node = nodes.SineOscillatorNode("Visualiser", node_editor)
+    elif (nodetype == 'gain'):
+        node = nodes.GainNode("Gain", node_editor, ap)
+
+    node_list.append(node)
+
+with dpg.window(label="Node editor", menubar=True) as main_window:
+    with dpg.menu_bar():
+        with dpg.menu(label='Add'):
+            dpg.add_menu_item(label='Sine Oscillator', callback=lambda: add_node('sine'))
+            dpg.add_menu_item(label='Gain', callback=lambda ap: add_node('gain'))
+            dpg.add_menu_item(label='Audio Playback', callback=lambda: add_node('audio'))
+
+    with dpg.node_editor(callback=link_callback, delink_callback=delink_callback) as node_editor:
+        pass
         # with dpg.node(label="Audio input", tag="AudioInput"):
         #     with dpg.node_attribute(label="Audio buffer", attribute_type=dpg.mvNode_Attr_Output):
         #         dpg.add_slider_int(
@@ -97,12 +119,6 @@ with dpg.window(label="Node editor", menubar=True) as node_editor:
         #         dpg.add_button(label="Open stream", callback=open_stream)
         #         dpg.add_button(label="Close stream", callback=close_stream)
 
-        # with dpg.node(label="Gain", tag="gain"):
-        #     with dpg.node_attribute(label="Settings"):
-        #         dpg.add_input_float(label="Gain", default_value=1, width=200, callback=on_gain_changed)
-        #     with dpg.node_attribute(label="Output", attribute_type=dpg.mvNode_Attr_Output):
-        #         pass
-        
         # with dpg.node(label="Visualiser", tag="visualiser"):
         #     with dpg.node_attribute(label="Audio input", attribute_type=dpg.mvNode_Attr_Input):
         #         pass
@@ -134,17 +150,27 @@ with dpg.window(label="Node editor", menubar=True) as node_editor:
         #                 dpg.set_axis_limits(dpg.last_item(), 0, 1000)
         #                 dpg.add_line_series([], [], label="Frequency Data", parent=dpg.last_item(), tag="freq_series")
 
-        # with dpg.node(label="Output", tag="out"):
-        #     with dpg.node_attribute(label="Settings"):
-        #         dpg.add_input_float(label="Volume", default_value=1, width=200)
+        # sine_output_node = nodes.SineOscillatorNode("Sinus Generator")
+        # audio_playback_node = nodes.AudioPlaybackNode("Audio Out")
+        # gain_node = nodes.GainNode("Gain", ap)
 
-        sine_output_node = nodes.SineOscillatorNode("Sinus Generator")
-        audio_playback_node = nodes.AudioPlaybackNode("Audio Out")
+def delete_node(sender, app_data):
+    node_tags = dpg.get_selected_nodes(node_editor=node_editor)
+    for tag in node_tags:
+        node = dpg.get_item_user_data(tag)
+        node.on_delete()
+
+
+with dpg.handler_registry():
+    del_down = dpg.add_key_press_handler(
+        dpg.mvKey_Delete,
+        callback=delete_node
+    )
 
 dpg.setup_dearpygui()
 dpg.show_item_registry()
 dpg.show_viewport()
-dpg.set_primary_window(node_editor, True)
+dpg.set_primary_window(main_window, True)
 dpg.start_dearpygui()
 
 # cleanup

@@ -6,61 +6,55 @@ from nodes.myglobals import *
 from nodes.basenode import DspNode
 
 class SineOscillatorNode(DspNode):
-    def __init__(self, name):
+    def __init__(self, name, node_editor):
         self.fs = SAMPLING_RATE
         self.freq = 440
         self.amplitude = 0.1
         self.phase = 0.0
         self.block_size = BLOCK_SIZE
         self.output_buffer = np.zeros(self.block_size)
-        self.horizontal_axis = np.arange(self.block_size).tolist()
 
-        super().__init__(name)
+        super().__init__(name, node_editor)
         self.run()
 
+    @DspNode._draw
     def draw(self):
-        with dpg.node(label=self.name) as self.node_id:
-            with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
-                self.lbl_fs = dpg.add_input_int(
-                    label="Sample rate",
-                    default_value=self.fs,
-                    width=200,
-                    enabled=False
-                )
-
-                self.input_amplitude = dpg.add_slider_float(
-                    label="Amplitude",
-                    width=200,
-                    default_value=self.amplitude,
-                    min_value=0,
-                    max_value=10,
-                    callback=self.on_amplitude_changed
-                )
-
-                self.input_freq = dpg.add_slider_float(
-                    label="Frequency",
-                    width=200,
-                    default_value=self.freq,
-                    min_value=20,
-                    max_value=20000,
-                    callback=self.on_freq_changed
-                )
-
-                with dpg.plot(label="Waveform Plot", height=500 ) as self.sine_plot:
-                    dpg.add_plot_axis(dpg.mvXAxis, label="Samples")
-                    dpg.set_axis_limits(dpg.last_item(), 0, self.block_size)
-
-                    with dpg.plot_axis(dpg.mvYAxis, label="Amplitude"):
-                        dpg.set_axis_limits(dpg.last_item(), -1, 1)
-                        self.sine_series = dpg.add_line_series(self.horizontal_axis, self.output_buffer.tolist(), label="Sine Wave", parent=dpg.last_item())
-                    
-
-            self.output = dpg.add_node_attribute(
-                label="Output",
-                parent=self.node_id,
-                attribute_type=dpg.mvNode_Attr_Output,
-                user_data=self
+        with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
+            self.lbl_fs = dpg.add_input_int(
+                label="Sample rate",
+                default_value=self.fs,
+                width=200,
+                enabled=False
             )
+
+            self.input_amplitude = dpg.add_slider_float(
+                label="Amplitude",
+                width=200,
+                default_value=self.amplitude,
+                min_value=0,
+                max_value=10,
+                callback=self.on_amplitude_changed
+            )
+
+            self.input_freq = dpg.add_slider_float(
+                label="Frequency",
+                width=200,
+                default_value=self.freq,
+                min_value=20,
+                max_value=20000,
+                callback=self.on_freq_changed
+            )
+
+            with dpg.tree_node(label="Visualiser", default_open=True):
+                self.graph = dpg.add_simple_plot(width=300, height=250)
+                dpg.set_value(self.graph, self.output_buffer.tolist())
+                
+        self.output = dpg.add_node_attribute(
+            label="Output",
+            parent=self.node_id,
+            attribute_type=dpg.mvNode_Attr_Output,
+            user_data=self
+        )
 
     def on_amplitude_changed(self, sender, app_data):
         self.amplitude = dpg.get_value(self.input_amplitude)
@@ -74,7 +68,7 @@ class SineOscillatorNode(DspNode):
         super().on_linked_output(node)
 
     def refresh_graph(self):
-        dpg.set_value(self.sine_series, [self.horizontal_axis, self.output_buffer.tolist()])
+        dpg.set_value(self.graph, self.output_buffer.tolist())
 
     def run(self):
         phase_increment = 2 * np.pi * self.freq / self.fs

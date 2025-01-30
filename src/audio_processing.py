@@ -1,12 +1,13 @@
 """Audio processing module"""
 
-# import pyopencl as cl
-from pyopencl import Program, CommandQueue, Buffer, enqueue_copy, mem_flags, create_some_context
+import pyopencl as ocl
 import numpy as np
 import pyaudio
 import os
 import threading
 import queue
+
+from nodes.myglobals import BLOCK_SIZE
 
 # set environment variable to automatically select a platform
 os.environ['PYOPENCL_CTX'] = ''
@@ -15,11 +16,10 @@ os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
 class AudioProcessing():
     """Audio processing module."""
     def __init__(self, 
-                 chunk=1024, 
+                 chunk=BLOCK_SIZE,
                  dtype=np.float32, 
                  channels=1, 
                  rate=44100):
-        print("AudioProcessing: initializing...")
         self.audio_handler = pyaudio.PyAudio()
         self.audio_input_stream = None
         self.audio_data = None
@@ -45,13 +45,13 @@ class AudioProcessing():
 
         self.audio_queue = queue.Queue()
 
-        self.ctx = create_some_context()
+        self.ctx = ocl.create_some_context()
 
         with open('src/kernel.cl', 'r') as f:
             kernel_code = f.read()
 
-        self.program = Program(self.ctx, kernel_code).build()
-        self.cl_queue = CommandQueue(self.ctx)
+        self.program = ocl.Program(self.ctx, kernel_code).build()
+        self.cl_queue = ocl.CommandQueue(self.ctx)
     
     def load_filter(self, filter_name, filter_path):
         """Load a filter from a file."""
@@ -78,19 +78,19 @@ class AudioProcessing():
             else:
                 continue
 
-            mf = mem_flags
-            input_buffer = Buffer(self.ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=chunk)
-            gain_output_buffer = Buffer(self.ctx, mf.READ_WRITE, chunk.nbytes)
+            mf = ocl.mem_flags
+            input_buffer = ocl.Buffer(self.ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=chunk)
+            gain_output_buffer = ocl.Buffer(self.ctx, mf.READ_WRITE, chunk.nbytes)
 
-            self.program.apply_gain(self.cl_queue, 
-                                    chunk.shape, 
-                                    None, 
-                                    input_buffer, 
-                                    gain_output_buffer, 
+            self.program.apply_gain(self.cl_queue,
+                                    chunk.shape,
+                                    None,
+                                    input_buffer,
+                                    gain_output_buffer,
                                     np.float32(self.gain))
 
-            conv_output_buffer = Buffer(self.ctx, mf.WRITE_ONLY, chunk.nbytes)
-            coef_input_buffer = Buffer(self.ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=self.filters['low_pass_2'])
+            conv_output_buffer = ocl.Buffer(self.ctx, mf.WRITE_ONLY, chunk.nbytes)
+            coef_input_buffer = ocl.Buffer(self.ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=self.filters['low_pass_2'])
 
             self.program.apply_convolution(self.cl_queue,
                                            chunk.shape,
@@ -102,7 +102,7 @@ class AudioProcessing():
                                            np.int32(chunk.shape[0]))
 
             dft_output = np.empty_like(chunk)
-            dft_output_buffer = Buffer(self.ctx, mf.WRITE_ONLY, dft_output.nbytes)
+            dft_output_buffer = ocl.Buffer(self.ctx, mf.WRITE_ONLY, dft_output.nbytes)
 
             self.program.dft(self.cl_queue,
                              chunk.shape,
@@ -113,8 +113,8 @@ class AudioProcessing():
                              np.int32(1))
 
             processed_chunk = np.empty_like(chunk)
-            enqueue_copy(self.cl_queue, processed_chunk, conv_output_buffer).wait()
-            enqueue_copy(self.cl_queue, dft_output, dft_output_buffer).wait()
+            ocl.enqueue_copy(self.cl_queue, processed_chunk, conv_output_buffer).wait()
+            ocl.enqueue_copy(self.cl_queue, dft_output, dft_output_buffer).wait()
 
             if self.playback:
                 self.out_stream.write(processed_chunk.tobytes())

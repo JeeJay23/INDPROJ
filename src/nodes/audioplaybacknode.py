@@ -1,32 +1,38 @@
+import threading
 import numpy as np
 import sounddevice as sd
-import threading
 import dearpygui.dearpygui as dpg
 
 from nodes.myglobals import *
 from nodes.basenode import DspNode
 
 class AudioPlaybackNode(DspNode):
-    def __init__(self, name):
+    def __init__(self, name, node_editor):
         self.blocksize = BLOCK_SIZE
         self.running = True
         self.channels = 2
         self.fs = SAMPLING_RATE
         self.audio_buffer = np.zeros(self.blocksize)
 
-        super().__init__(name)
+        super().__init__(name, node_editor)
     
+    # base draw created the node, add controls from here
+    @DspNode._draw
     def draw(self):
-        with dpg.node(label=self.name) as self.node_id:
-            with dpg.node_attribute(user_data=self):
-                self.input_volume = dpg.add_slider_float(
-                    label="Volume",
-                    width=200,
-                    default_value=.5,
-                    min_value=0,
-                    max_value=1,
-                    callback=self.on_volume_changed
-                )
+        # with dpg.node(label=self.name, user_data=self) as self.node_id:
+        with dpg.node_attribute(user_data=self):
+            self.input_volume = dpg.add_slider_float(
+                label="Volume",
+                width=200,
+                default_value=.5,
+                min_value=0,
+                max_value=1,
+                callback=self.on_volume_changed
+            )
+
+    def on_delete(self):
+        self.stop()
+        return super().on_delete()
 
     def stop(self):
         self.running = False
@@ -39,7 +45,7 @@ class AudioPlaybackNode(DspNode):
         super().on_linked_input(node)
 
     def on_delinked_input(self, node):
-        self.running = False
+        self.stop()
         super().on_delinked_input(node)
 
     def audio_out(self):
@@ -57,6 +63,7 @@ class AudioPlaybackNode(DspNode):
             return
 
         self.audio_buffer = self.input_nodes[0].output_buffer
+
         outdata[:, 0] = self.audio_buffer
         self.input_nodes[0].run()
     
