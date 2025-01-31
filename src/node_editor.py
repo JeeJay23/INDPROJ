@@ -75,14 +75,20 @@ def on_update_yAxis(sender, app_data):
 node_list = []
 node_editor = None
 
+class NodeTypes():
+    AUDIO = 'audio'
+    SINE = 'sine'
+    GAIN = 'gain'
+    DFT = 'dft'
+
 def add_node(nodetype):
     if node_editor is None:
         return
-    elif (nodetype == 'audio'):
+    elif (nodetype == NodeTypes.AUDIO):
         node = nodes.AudioPlaybackNode("Audio Input", node_editor)
-    elif (nodetype == 'sine'):
-        node = nodes.SineOscillatorNode("Visualiser", node_editor)
-    elif (nodetype == 'gain'):
+    elif (nodetype == NodeTypes.SINE):
+        node = nodes.SineOscillatorNode("Sine wave generator", node_editor)
+    elif (nodetype == NodeTypes.GAIN):
         node = nodes.GainNode("Gain", node_editor, ap)
 
     node_list.append(node)
@@ -90,9 +96,10 @@ def add_node(nodetype):
 with dpg.window(label="Node editor", menubar=True) as main_window:
     with dpg.menu_bar():
         with dpg.menu(label='Add'):
-            dpg.add_menu_item(label='Sine Oscillator', callback=lambda: add_node('sine'))
-            dpg.add_menu_item(label='Gain', callback=lambda ap: add_node('gain'))
-            dpg.add_menu_item(label='Audio Playback', callback=lambda: add_node('audio'))
+            dpg.add_menu_item(label='Sine Oscillator', callback=lambda: add_node(NodeTypes.SINE))
+            dpg.add_menu_item(label='Gain', callback=lambda ap: add_node(NodeTypes.GAIN))
+            dpg.add_menu_item(label='Audio Playback', callback=lambda: add_node(NodeTypes.AUDIO))
+            dpg.add_menu_item(label='Frequency Analyzer', callback=lambda: add_node(NodeTypes.DFT))
 
     with dpg.node_editor(callback=link_callback, delink_callback=delink_callback) as node_editor:
         pass
@@ -174,6 +181,8 @@ dpg.set_primary_window(main_window, True)
 dpg.start_dearpygui()
 
 # cleanup
-audio_playback_node.stop()
+
+for node in node_list:
+    node.on_delete()
 dpg.destroy_context()
 ap.close_stream()

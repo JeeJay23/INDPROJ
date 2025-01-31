@@ -28,8 +28,11 @@ class DspNode():
     def on_delete(self):
         for node in self.output_nodes:
             node.on_delinked_input(self)
+        # links can be deleted by coupled nodes, so we need to check if they still exist before deleting them
         for link in self.out_links:
-            dpg.delete_item(link)
+            if dpg.does_item_exist(link):
+                dpg.delete_item(link)
+
         dpg.delete_item(self.node_id)
 
     def on_linked_input(self, node):
