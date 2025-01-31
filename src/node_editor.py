@@ -33,10 +33,6 @@ def delink_callback(sender, app_data):
     print(f'from node: {linked_nodes[0]} to node: {linked_nodes[1]}')
     dpg.delete_item(app_data)
 
-def on_update_buffer_size(sender, app_data):
-    dpg.set_axis_limits("xAxis", 0, dpg.get_value("bufferSize"))
-    dpg.set_axis_limits("xAxis_2", 0, dpg.get_value("bufferSize"))
-    dpg.set_axis_limits("xAxis_3", 0, dpg.get_value("bufferSize"))
 
 def open_stream(sender, app_data):
     global ap
@@ -58,19 +54,6 @@ def open_stream(sender, app_data):
 
 def close_stream(sender, app_data):
     ap.close_stream()
-
-def on_audio_processed(chunk, processed_chunk, dtf_abs):
-    dpg.set_value("audio_series_2", [list(range(dpg.get_value("bufferSize"))), processed_chunk.tolist()])
-    dpg.set_value("freq_series", [list(range(int(dpg.get_value("bufferSize")))), dtf_abs.tolist()])
-
-def on_gain_changed(sender, app_data):
-    ap.gain = dpg.get_value(sender)
-
-def update_plot(audio_data):
-    dpg.set_value("audio_series", [list(range(dpg.get_value("bufferSize"))), audio_data.tolist()])
-
-def on_update_yAxis(sender, app_data):
-    dpg.set_axis_limits("yAxis", 0, dpg.get_value("freq_yscale"))
 
 node_list = []
 node_editor = None
@@ -122,51 +105,6 @@ with dpg.window(label="Node editor", menubar=True) as main_window:
         #             callback=on_update_buffer_size)
         #         dpg.add_input_float(tag="volume", label="volume", width=150, default_value=1.0)
         #         dpg.add_input_int(tag="fs", label="sample rate", width=150, default_value=44100)
-
-        #         with dpg.plot(label="Waveform Plot", height=500):
-        #             dpg.add_plot_axis(dpg.mvXAxis, label="Samples", tag="xAxis")
-        #             dpg.set_axis_limits(dpg.last_item(), 0, dpg.get_value("bufferSize"))
-        #             with dpg.plot_axis(dpg.mvYAxis, label="Amplitude"):
-        #                 dpg.set_axis_limits(dpg.last_item(), GRAPH_MIN_AMP, GRAPH_MAX_AMP)
-        #                 dpg.add_line_series([], [], label="Audio Data", parent=dpg.last_item(), tag="audio_series")
-
-        #         dpg.add_button(label="Open stream", callback=open_stream)
-        #         dpg.add_button(label="Close stream", callback=close_stream)
-
-        # with dpg.node(label="Visualiser", tag="visualiser"):
-        #     with dpg.node_attribute(label="Audio input", attribute_type=dpg.mvNode_Attr_Input):
-        #         pass
-        #     with dpg.node_attribute(label="visualiser", attribute_type=dpg.mvNode_Attr_Output):
-        #         with dpg.plot(label="Waveform Plot", height=500):
-        #             dpg.add_plot_axis(dpg.mvXAxis, label="Samples", tag="xAxis_2")
-        #             dpg.set_axis_limits(dpg.last_item(), 0, dpg.get_value("bufferSize"))
-        #             with dpg.plot_axis(dpg.mvYAxis, label="Amplitude"):
-        #                 dpg.set_axis_limits(dpg.last_item(), GRAPH_MIN_AMP, GRAPH_MAX_AMP)
-        #                 dpg.add_line_series([], [], label="Audio Data", parent=dpg.last_item(), tag="audio_series_2")
-        
-        # with dpg.node(label="Frequency spectrum", tag="freq_vis"):
-        #     with dpg.node_attribute(label="Audio input", attribute_type=dpg.mvNode_Attr_Input):
-        #         pass
-        #     with dpg.node_attribute(label="visualiser", attribute_type=dpg.mvNode_Attr_Output):
-        #         dpg.add_slider_int(
-        #             tag="freq_yscale",
-        #             label="frequency_y_scale",
-        #             width=150,
-        #             default_value=100,
-        #             min_value=100,
-        #             max_value=2000,
-        #             callback=on_update_yAxis)
-        #         with dpg.plot(label="Frequency Spectrum", height=500):
-        #             dpg.add_plot_axis(dpg.mvXAxis, label="Frequency", tag="xAxis_3")
-        #             # because we are submitting our input in chunks to the dft, we get a result of the same size
-        #             dpg.set_axis_limits(dpg.last_item(), 0, dpg.get_value("bufferSize"))
-        #             with dpg.plot_axis(dpg.mvYAxis, tag="yAxis", label="Magnitude"):
-        #                 dpg.set_axis_limits(dpg.last_item(), 0, 1000)
-        #                 dpg.add_line_series([], [], label="Frequency Data", parent=dpg.last_item(), tag="freq_series")
-
-        # sine_output_node = nodes.SineOscillatorNode("Sinus Generator")
-        # audio_playback_node = nodes.AudioPlaybackNode("Audio Out")
-        # gain_node = nodes.GainNode("Gain", ap)
 
 def delete_node(sender, app_data):
     node_tags = dpg.get_selected_nodes(node_editor=node_editor)
