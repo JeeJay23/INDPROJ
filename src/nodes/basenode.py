@@ -4,13 +4,12 @@ class DspNode():
     def __init__(self, name, node_editor):
         self.name = name
         self.is_active = False
-        self.node_id = None # assigned in draw
+        self.node_id = None # assigned in draw wrapper
         self.input_nodes = []
         self.output_nodes = []
         self.out_links = []
         self.node_editor = node_editor
         self.draw()
-        self.run()
 
     def _draw(func):
         def wrapper(*args):
@@ -38,8 +37,8 @@ class DspNode():
     def on_linked_input(self, node):
         print(f'{self.name}: linked input from {node.name}')
         self.is_active = True
-        node.run()
         self.input_nodes.append(node)
+        node.run()
 
     def on_linked_output(self, node):
         print(f'{self.name}: linked output to {node.name}')

@@ -90,6 +90,8 @@ def add_node(nodetype):
         node = nodes.SineOscillatorNode("Sine wave generator", node_editor)
     elif (nodetype == NodeTypes.GAIN):
         node = nodes.GainNode("Gain", node_editor, ap)
+    elif (nodetype == NodeTypes.DFT):
+        node = nodes.DftNode("Frequency Analyzer", node_editor, ap)
 
     node_list.append(node)
 
@@ -101,7 +103,12 @@ with dpg.window(label="Node editor", menubar=True) as main_window:
             dpg.add_menu_item(label='Audio Playback', callback=lambda: add_node(NodeTypes.AUDIO))
             dpg.add_menu_item(label='Frequency Analyzer', callback=lambda: add_node(NodeTypes.DFT))
 
-    with dpg.node_editor(callback=link_callback, delink_callback=delink_callback) as node_editor:
+    with dpg.node_editor(
+        callback=link_callback, 
+        delink_callback=delink_callback, 
+        minimap=True, 
+        minimap_location=dpg.mvNodeMiniMap_Location_BottomRight
+    ) as node_editor:
         pass
         # with dpg.node(label="Audio input", tag="AudioInput"):
         #     with dpg.node_attribute(label="Audio buffer", attribute_type=dpg.mvNode_Attr_Output):
@@ -175,7 +182,7 @@ with dpg.handler_registry():
     )
 
 dpg.setup_dearpygui()
-dpg.show_item_registry()
+# dpg.show_item_registry()
 dpg.show_viewport()
 dpg.set_primary_window(main_window, True)
 dpg.start_dearpygui()

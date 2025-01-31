@@ -7,7 +7,7 @@ from nodes.basenode import DspNode
 
 class SineOscillatorNode(DspNode):
     def __init__(self, name, node_editor):
-        self.fs = SAMPLING_RATE
+        self.fs = SAMPLING_FREQ
         self.freq = 440
         self.amplitude = 0.1
         self.phase = 0.0

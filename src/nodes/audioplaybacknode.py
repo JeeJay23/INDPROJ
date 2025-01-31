@@ -11,7 +11,7 @@ class AudioPlaybackNode(DspNode):
         self.blocksize = BLOCK_SIZE
         self.running = True
         self.channels = 2
-        self.fs = SAMPLING_RATE
+        self.fs = SAMPLING_FREQ
         self.audio_buffer = np.zeros(self.blocksize)
 
         super().__init__(name, node_editor)
